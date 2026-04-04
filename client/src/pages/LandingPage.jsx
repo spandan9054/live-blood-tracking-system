@@ -173,7 +173,8 @@ const LandingPage = () => {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 whileHover={{ scale: 1.02 }}
-                className="bg-white p-10 rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.02)] border border-slate-100 flex flex-col justify-between transition-all"
+                className="bg-white p-10 rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.02)] border border-slate-100 flex flex-col justify-between transition-all antigravity-feedback"
+                style={{ animationDelay: `${idx * 0.4}s` }}
               >
                     <Quote className="text-primary/10 mb-8" size={60} />
                     <p className="text-2xl font-bold italic text-slate-800 leading-relaxed mb-10">"{t.text}"</p>

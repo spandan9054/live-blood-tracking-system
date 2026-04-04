@@ -8,9 +8,10 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // 4. Middleware setup before route definitions
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB Connected ✅"))
-  .catch(err => console.log("MongoDB Error ❌", err));credentials: true
+app.use(cors({
+    origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+    credentials: true
+}));
 app.use(express.json());
 
 // Routes
@@ -18,9 +19,19 @@ app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/hospitals', require('./routes/hospitalRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/donations', require('./routes/donationRoutes'));
+app.use('/api/requests', require('./routes/requestRoutes'));
 
 app.get('/', (req, res) => {
   res.send('SBAN API is running...');
+});
+
+app.get('/api/health', (req, res) => {
+    // readyState: 0 = disconnected, 1 = connected, 2 = connecting, 3 = disconnecting
+    const status = mongoose.connection.readyState;
+    res.json({ 
+        database_status: status, 
+        message: status === 1 ? 'Network Node Connected' : 'Network Communication Failure' 
+    });
 });
 
 // 2. Robust Database Connection
@@ -28,6 +39,14 @@ const connectDB = async () => {
     try {
         // Prevent Mongoose 7+ deprecation warnings
         mongoose.set('strictQuery', false);
+        
+        // --- CRITICAL FIX: Disable Buffering ---
+        // Throws immediate error if not connected instead of waiting 10s and crashing countDocuments()
+        mongoose.set('bufferCommands', false);
+
+        // Add Connection Event Listeners
+        mongoose.connection.on('connected', () => console.log('🟢 MongoDB Event: Active Node Topology Established'));
+        mongoose.connection.on('error', (err) => console.log('🔴 MongoDB Event: Node Desynchronization Error', err));
 
         const mongoUri = process.env.MONGO_URI;
 
@@ -45,7 +64,8 @@ const connectDB = async () => {
 
         console.log('Connecting to Global Network (MongoDB)...');
         const conn = await mongoose.connect(mongoUri, {
-            serverSelectionTimeoutMS: 10000, // 10s timeout, avoid infinite hang
+            serverSelectionTimeoutMS: 5000, // Fail fast if IP is blocked
+            family: 4, // Force IPv4 to resolve local network routing bugs
         });
 
         console.log(`📡 Network Node Active: ${conn.connection.host}`);
@@ -70,7 +90,7 @@ const connectDB = async () => {
         // Log exact error and kill process
         console.error('❌ CRITICAL NODE CRASH:', err.message);
         if (err.name === 'MongooseServerSelectionError') {
-            console.error('CHECK: Is your MongoDB service running? (mongod)');
+            console.error('❌ DATABASE BLOCKED: Check your MongoDB Atlas IP Whitelist (0.0.0.0/0)!');
         }
         process.exit(1); 
     }

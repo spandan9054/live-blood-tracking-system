@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, MapPin, Phone, Hospital as HospitalIcon, Droplet, ArrowRight, ShieldCheck, Activity, Info } from 'lucide-react';
+import { Search, MapPin, Phone, Hospital as HospitalIcon, Droplet, ArrowRight, ShieldCheck, Activity, Info, X } from 'lucide-react';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 
@@ -9,6 +9,11 @@ const HospitalList = () => {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedHospital, setSelectedHospital] = useState(null);
+  const [formData, setFormData] = useState({
+    name: '', email: '', phone: '', address: '', medicalHistory: '', bloodGroup: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -38,12 +43,36 @@ const HospitalList = () => {
     return diffDays >= 100;
   };
 
-  const handleDonate = async (hospitalId) => {
+  const handleDonateClick = (hospitalId) => {
+    setSelectedHospital(hospitalId);
+    setFormData(prev => ({
+        ...prev,
+        name: user?.name || '',
+        email: user?.email || '',
+        phone: user?.phone || '',
+        address: user?.address || '',
+        gender: user?.gender || 'Other',
+        bloodGroup: user?.bloodGroup || 'A+'
+    }));
+  };
+
+  const closeModal = () => {
+    setSelectedHospital(null);
+    setFormData({ name: '', email: '', phone: '', address: '', gender: 'Other', medicalHistory: '', bloodGroup: 'A+' });
+  };
+
+  const submitRequest = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
     try {
-      await api.post('/donations', { hospitalId });
-      alert("Donation request sent! The hospital will notify you soon.");
+      await api.post('/requests/new', { ...formData, hospitalId: selectedHospital });
+      alert("Request Sent Successfully. The network will dispatch clearance momentarily.");
+      closeModal();
     } catch (error) {
-      alert(error.response?.data?.message || "Failed to send request");
+      console.error("DEBUG RAW AXIOS ERROR:", error);
+      alert(error.response?.data?.message || "Transmission Failure. Request Dropped.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -119,7 +148,7 @@ const HospitalList = () => {
                     variants={item}
                     layout
                     whileHover={{ y: -15, scale: 1.02 }}
-                    className="bg-white rounded-[3rem] shadow-[0_30px_70px_rgba(0,0,0,0.04)] hover:shadow-[0_50px_100px_rgba(178,34,34,0.1)] transition-all border border-slate-100 overflow-hidden flex flex-col group relative"
+                    className="bg-white rounded-[3rem] shadow-[0_30px_70px_rgba(0,0,0,0.04)] hover:shadow-[0_50px_100px_rgba(178,34,34,0.1)] transition-all border border-slate-100 overflow-hidden flex flex-col group relative antigravity-element"
                   >
                     {/* Header: Visuals & Badges */}
                     <div className="p-10 bg-gradient-to-br from-slate-50/50 to-white border-b border-slate-50 relative overflow-hidden">
@@ -180,7 +209,7 @@ const HospitalList = () => {
                         <motion.button 
                           whileHover={canDonate() ? { y: -5, shadow: "0 20px 40px rgba(178, 34, 34, 0.2)" } : {}}
                           whileTap={canDonate() ? { scale: 0.98 } : {}}
-                          onClick={() => handleDonate(hospital._id)}
+                          onClick={() => handleDonateClick(hospital._id)}
                           disabled={!canDonate()}
                           className={`w-full py-6 rounded-[2rem] font-black text-[13px] uppercase tracking-[0.25em] flex items-center justify-center gap-4 transition-all relative overflow-hidden ${canDonate() ? 'bg-primary text-white shadow-2xl shadow-red-100' : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'}`}
                         >
@@ -226,6 +255,78 @@ const HospitalList = () => {
             </motion.div>
         )}
       </div>
+
+      {/* Access Request Overlay Modal */}
+      <AnimatePresence>
+        {selectedHospital && (
+            <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xl font-['Outfit']"
+            >
+                <motion.div 
+                    initial={{ scale: 0.9, y: 20 }}
+                    animate={{ scale: 1, y: 0 }}
+                    exit={{ scale: 0.9, opacity: 0 }}
+                    className="bg-white rounded-[3rem] p-10 max-w-2xl w-full shadow-[0_50px_100px_rgba(0,0,0,0.2)] border border-slate-100 relative max-h-[90vh] overflow-y-auto"
+                >
+                    <button onClick={closeModal} className="absolute right-8 top-8 p-3 rounded-full bg-slate-50 text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-all">
+                        <X size={20} />
+                    </button>
+                    
+                    <div className="flex items-center gap-4 mb-8">
+                        <div className="w-14 h-14 bg-red-50 text-primary rounded-2xl flex items-center justify-center"><Droplet size={24} /></div>
+                        <div>
+                            <h2 className="text-3xl font-black text-slate-900 tracking-tight">Request Node Access</h2>
+                            <p className="text-[10px] uppercase font-black tracking-widest text-slate-400 mt-1">Submit biological metadata for clearance</p>
+                        </div>
+                    </div>
+
+                    <form onSubmit={submitRequest} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <label className="text-[10px] uppercase font-black text-slate-400 tracking-widest px-2">Identity Matrix</label>
+                            <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl p-4 font-bold outline-none focus:bg-white focus:border-slate-300 transition-all text-slate-800" />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[10px] uppercase font-black text-slate-400 tracking-widest px-2">Com-Link (Email)</label>
+                            <input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} required className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl p-4 font-bold outline-none focus:bg-white focus:border-slate-300 transition-all text-slate-800" />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[10px] uppercase font-black text-slate-400 tracking-widest px-2">Sub-Space Channel (Phone)</label>
+                            <input type="tel" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} required className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl p-4 font-bold outline-none focus:bg-white focus:border-slate-300 transition-all text-slate-800" />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[10px] uppercase font-black text-slate-400 tracking-widest px-2">Classification</label>
+                            <select value={formData.bloodGroup} onChange={e => setFormData({...formData, bloodGroup: e.target.value})} className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl p-4 font-bold outline-none focus:bg-white focus:border-slate-300 transition-all text-slate-800 cursor-pointer">
+                                {['A+','A-','B+','B-','AB+','AB-','O+','O-'].map(bg => <option key={bg} value={bg}>{bg}</option>)}
+                            </select>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[10px] uppercase font-black text-slate-400 tracking-widest px-2">Biology (Gender)</label>
+                            <select value={formData.gender} onChange={e => setFormData({...formData, gender: e.target.value})} className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl p-4 font-bold outline-none focus:bg-white focus:border-slate-300 transition-all text-slate-800 cursor-pointer">
+                                {['Male','Female','Other'].map(g => <option key={g} value={g}>{g}</option>)}
+                            </select>
+                        </div>
+                        <div className="space-y-2 md:col-span-2">
+                            <label className="text-[10px] uppercase font-black text-slate-400 tracking-widest px-2">Physical Origin</label>
+                            <input type="text" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} required className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl p-4 font-bold outline-none focus:bg-white focus:border-slate-300 transition-all text-slate-800" />
+                        </div>
+                        <div className="space-y-2 md:col-span-2">
+                            <label className="text-[10px] uppercase font-black text-slate-400 tracking-widest px-2">Historical Anomalies (Medical History)</label>
+                            <textarea value={formData.medicalHistory} onChange={e => setFormData({...formData, medicalHistory: e.target.value})} rows="3" placeholder="No specific conditions reported..." className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl p-4 font-bold outline-none focus:bg-white focus:border-slate-300 transition-all text-slate-800 resize-none"></textarea>
+                        </div>
+                        <div className="md:col-span-2 mt-4 pt-8 border-t border-slate-100 flex justify-end gap-4">
+                            <button type="button" onClick={closeModal} className="px-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest text-slate-500 hover:bg-slate-50 transition-colors">Cancel Access</button>
+                            <button type="submit" disabled={isSubmitting} className="px-10 py-4 rounded-2xl bg-primary text-white font-black text-[11px] uppercase tracking-widest shadow-2xl shadow-red-100 hover:bg-red-800 transition-all disabled:opacity-50">
+                                {isSubmitting ? 'Transmitting...' : 'Dispatch Request Sequence'}
+                            </button>
+                        </div>
+                    </form>
+                </motion.div>
+            </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

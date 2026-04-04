@@ -17,7 +17,7 @@ const HospitalDashboard = () => {
       try {
         const [profileRes, donationsRes] = await Promise.all([
           api.get('/hospitals/profile'),
-          api.get('/donations/my-donations')
+          api.get('/requests/hospital')
         ]);
         setProfile(profileRes.data);
         setDonations(donationsRes.data);
@@ -74,12 +74,22 @@ const HospitalDashboard = () => {
 
   const handleAcceptDonation = async (donationId) => {
     try {
-      await api.put(`/donations/accept/${donationId}`);
-      alert("Donation accepted and user notified via email!");
-      const { data } = await api.get('/donations/my-donations');
+      await api.patch(`/requests/approve/${donationId}`, { status: 'Accepted' });
+      alert("Donation node authenticated. Access granted!");
+      const { data } = await api.get('/requests/hospital');
       setDonations(data);
     } catch (err) {
-      alert("Failed to accept donation");
+      alert("Failed to authenticate request");
+    }
+  };
+
+  const handleRejectDonation = async (donationId) => {
+    try {
+      await api.patch(`/requests/approve/${donationId}`, { status: 'Rejected' });
+      const { data } = await api.get('/requests/hospital');
+      setDonations(data);
+    } catch (err) {
+      alert("Failed to reject request");
     }
   };
 
@@ -268,23 +278,50 @@ const HospitalDashboard = () => {
                             exit={{ opacity: 0, scale: 0.8 }}
                             className="p-6 bg-slate-50 rounded-[2.5rem] border border-slate-100 flex items-center justify-between group hover:bg-white hover:shadow-2xl transition-all duration-500"
                         >
-                          <div className="flex items-center gap-5">
-                             <div className="w-14 h-14 rounded-2xl bg-white border border-slate-100 flex items-center justify-center font-black text-slate-400 group-hover:bg-primary group-hover:text-white transition-all shadow-sm overflow-hidden">
-                                {d.user.photo ? <img src={d.user.photo} className="w-full h-full object-cover" /> : <User size={24} />}
-                             </div>
-                             <div>
-                                <p className="font-black text-slate-900 tracking-tight group-hover:text-primary transition-colors">{d.user.name}</p>
-                                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">{d.user.bloodGroup} Target</p>
-                             </div>
+                          <div className="flex flex-col gap-4 w-full">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-5">
+                                 <div className="w-14 h-14 rounded-2xl bg-white border border-slate-100 flex items-center justify-center font-black text-slate-400 group-hover:bg-primary group-hover:text-white transition-all shadow-sm overflow-hidden">
+                                    {d.user?.photo ? <img src={d.user.photo} className="w-full h-full object-cover" /> : <User size={24} />}
+                                 </div>
+                                 <div className="flex flex-col">
+                                    <p className="font-black text-slate-900 tracking-tight group-hover:text-primary transition-colors">{d.name}</p>
+                                    <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">{d.bloodGroup} Target {d.gender ? `• ${d.gender}` : ''}</p>
+                                 </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <motion.button 
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.9 }}
+                                  onClick={() => handleRejectDonation(d._id)} 
+                                  className="w-10 h-10 rounded-2xl bg-white text-slate-400 border border-slate-100 flex items-center justify-center hover:bg-slate-100 transition-all shadow-sm"
+                                >
+                                  X
+                                </motion.button>
+                                <motion.button 
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.9 }}
+                                  onClick={() => handleAcceptDonation(d._id)} 
+                                  className="w-12 h-12 rounded-2xl bg-primary text-white flex items-center justify-center hover:bg-red-800 transition-all shadow-xl shadow-red-100"
+                                >
+                                  <CheckCircle size={22} />
+                                </motion.button>
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 gap-2">
+                                {/* Physical Origin */}
+                                <div className="w-full bg-slate-100 p-2.5 rounded-xl text-xs text-slate-500 font-medium">
+                                    <span className="font-black text-slate-900 mb-1 block text-[9px] uppercase tracking-widest">Physical Origin:</span>
+                                    {d.address}
+                                </div>
+                                {/* Medical History Extracted Container */}
+                                <div className="w-full bg-white p-2.5 rounded-xl border border-slate-100 text-xs text-slate-500 font-medium">
+                                    <span className="font-black text-slate-900 mb-1 block text-[9px] uppercase tracking-widest">Medical History Check:</span>
+                                    {d.medicalHistory}
+                                </div>
+                            </div>
                           </div>
-                          <motion.button 
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => handleAcceptDonation(d._id)} 
-                            className="w-12 h-12 rounded-2xl bg-primary text-white flex items-center justify-center hover:bg-red-800 transition-all shadow-xl shadow-red-100"
-                          >
-                            <CheckCircle size={22} />
-                          </motion.button>
                         </motion.div>
                       ))
                     ) : (

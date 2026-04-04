@@ -59,17 +59,17 @@ const AuthPage = () => {
                 {/* Left Side: Info & Role Selector */}
                 <div className="bg-primary p-12 text-white md:w-2/5 flex flex-col justify-between relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-[#B22222] via-[#8B0000] to-[#550000] opacity-95"></div>
-                    
+
                     <div className="relative z-10">
-                        <motion.button 
+                        <motion.button
                             whileHover={{ x: -10 }}
                             onClick={() => navigate('/')}
                             className="text-white/80 hover:text-white flex items-center gap-2 mb-12 font-black text-[10px] uppercase tracking-widest bg-white/10 w-max px-5 py-2.5 rounded-full border border-white/10 transition-all font-['Outfit']"
                         >
                             <ArrowRight className="rotate-180" size={14} /> Global Network
                         </motion.button>
-                        
-                        <motion.h2 
+
+                        <motion.h2
                             initial={{ x: -20, opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
                             className="text-5xl font-black mb-6 leading-[1.1] tracking-tight"
@@ -79,18 +79,18 @@ const AuthPage = () => {
                         <p className="text-red-100/80 font-medium text-lg leading-relaxed mb-12 max-w-sm">Join SBAN to revolutionize how blood is tracked, donated, and delivered during critical hours.</p>
 
                         <div className="bg-black/20 p-1.5 rounded-[2.5rem] flex relative backdrop-blur-md border border-white/10 shadow-inner">
-                            <motion.div 
+                            <motion.div
                                 animate={{ x: authType === 'user' ? '0%' : '100%' }}
                                 transition={{ type: "spring", stiffness: 350, damping: 35 }}
                                 className="absolute left-1.5 top-1.5 bottom-1.5 w-[calc(50%-6px)] bg-white rounded-[2rem] shadow-xl"
                             />
-                            <button 
+                            <button
                                 onClick={() => setAuthType('user')}
                                 className={`w-1/2 py-4 rounded-[2rem] z-10 transition-all duration-500 font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 ${authType === 'user' ? 'text-primary' : 'text-white/70 hover:text-white font-bold'}`}
                             >
                                 <User size={18} /> User
                             </button>
-                            <button 
+                            <button
                                 onClick={() => setAuthType('hospital')}
                                 className={`w-1/2 py-4 rounded-[2rem] z-10 transition-all duration-500 font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 ${authType === 'hospital' ? 'text-primary' : 'text-white/70 hover:text-white font-bold'}`}
                             >
@@ -121,8 +121,8 @@ const AuthPage = () => {
                     </div>
 
                     {error && (
-                        <motion.div 
-                            initial={{ opacity: 0, y: -10 }} 
+                        <motion.div
+                            initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
                             className="bg-red-50 text-red-600 p-5 rounded-[1.5rem] mb-10 text-[11px] font-black uppercase tracking-widest border border-red-100 flex items-center gap-4"
                         >
@@ -213,10 +213,10 @@ const AuthPage = () => {
                             </>
                         )}
 
-                        <motion.button 
+                        <motion.button
                             whileHover={{ y: -8, shadow: "0 30px 60px rgba(178, 34, 34, 0.25)" }}
                             whileTap={{ scale: 0.97 }}
-                            type="submit" 
+                            type="submit"
                             disabled={loading}
                             className="md:col-span-2 mt-6 bg-[#B22222] text-white py-6 rounded-[2rem] font-black text-[13px] uppercase tracking-[0.3em] flex items-center justify-center gap-4 transition-all hover:bg-[#8B0000] disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl shadow-red-100 ring-4 ring-primary/10"
                         >

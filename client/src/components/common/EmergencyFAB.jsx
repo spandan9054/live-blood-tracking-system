@@ -33,7 +33,7 @@ const EmergencyFAB = () => {
   };
 
   return (
-    <div className="fixed bottom-8 right-8 z-[100]">
+    <div className="fixed bottom-8 right-8 z-[100] antigravity-element">
       <AnimatePresence>
         {isOpen && (
           <motion.div
