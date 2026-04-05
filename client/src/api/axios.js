@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || process.env.VITE_API_URL || '/api',
+  baseURL: import.meta.env.VITE_API_URL || '/api',
 });
 
 // Interceptor to add JWT token to headers if it exists
