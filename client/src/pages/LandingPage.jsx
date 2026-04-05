@@ -13,7 +13,13 @@ const LandingPage = () => {
     const fetchTestimonials = async () => {
       try {
         const { data } = await api.get('/users/testimonials');
-        setTestimonials(data);
+        // Protection against HTML responses on deployment (causes .map is not a function)
+        if (Array.isArray(data)) {
+          setTestimonials(data);
+        } else {
+          console.error("Expected array but got:", typeof data);
+          setTestimonials([]);
+        }
       } catch (error) {
         console.error('Error fetching testimonials:', error);
       }
