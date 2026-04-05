@@ -17,6 +17,12 @@ api.interceptors.request.use((config) => {
     config.headers['x-api-key'] = apiKey;
   }
   
+  // VISUAL DEBUGGER FOR DEPLOYMENT:
+  console.log("🚀 SENDING API REQUEST TO: ", config.baseURL + config.url);
+  if (config.baseURL === '/api' && !window.location.hostname.includes('localhost')) {
+     alert("⚠️ DEPLOYMENT ERROR: Your app is trying to send data to Vercel's static server instead of your real backend. You forgot to set VITE_API_URL in your Vercel Dashboard, or you forgot to Redeploy after setting it!");
+  }
+  
   return config;
 });
 
