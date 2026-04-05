@@ -9,7 +9,14 @@ const PORT = process.env.PORT || 5000;
 
 // 4. Middleware setup before route definitions
 app.use(cors({
-    origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        
+        // You can restrict this to your specific Vercel URL later
+        // e.g., if (origin === 'https://your-app.vercel.app')
+        return callback(null, true); // Allow all origins for now to prevent network errors
+    },
     credentials: true
 }));
 app.use(express.json());
@@ -106,3 +113,6 @@ const connectDB = async () => {
 
 // Fire initiation
 connectDB();
+
+// Required for Vercel/Serverless deployment
+module.exports = app;
