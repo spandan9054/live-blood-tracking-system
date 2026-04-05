@@ -13,13 +13,15 @@ const userSchema = new mongoose.Schema({
   photo: { type: String }, // Optional path/URL
   location: {
     type: { type: String, default: 'Point' },
-    coordinates: { type: [Number], index: '2dsphere' } // [long, lat]
+    coordinates: { type: [Number] } // [long, lat]
   },
   createdAt: { type: Date, default: Date.now }
 }, {
   toJSON: { virtuals: true },
   toObject: { virtuals: true }
 });
+
+userSchema.index({ location: "2dsphere" });
 
 // Calculate age dynamically from DOB
 userSchema.virtual('age').get(function() {

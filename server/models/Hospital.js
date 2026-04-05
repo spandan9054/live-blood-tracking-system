@@ -20,10 +20,12 @@ const hospitalSchema = new mongoose.Schema({
   },
   location: {
     type: { type: String, default: 'Point' },
-    coordinates: { type: [Number], index: '2dsphere' } // [long, lat]
+    coordinates: { type: [Number] } // [long, lat]
   },
   createdAt: { type: Date, default: Date.now }
 });
+
+hospitalSchema.index({ location: "2dsphere" });
 
 // Hash password before saving
 hospitalSchema.pre('save', async function() {

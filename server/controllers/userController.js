@@ -15,22 +15,35 @@ const getUserProfile = async (req, res) => {
 const triggerEmergencyAlert = async (req, res) => {
   const { longitude, latitude, bloodGroup, message } = req.body;
   try {
-    // 50km = 50,000 meters
-    const usersInRange = await User.find({
-      location: {
-        $near: {
-          $geometry: { type: 'Point', coordinates: [longitude, latitude] },
-          $maxDistance: 50000
+    // Team Error-404 Protocol: 30km radius (30,000 meters)
+    const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+
+    const usersInRange = await User.aggregate([
+      {
+        $geoNear: {
+          near: { type: 'Point', coordinates: [longitude, latitude] },
+          key: 'location',
+          distanceField: 'distance',
+          maxDistance: 30000,
+          spherical: true,
+          query: { bloodGroup: bloodGroup } // Filter exact match early on
         }
       },
-      bloodGroup: bloodGroup
-    });
+      {
+        $match: {
+          $or: [
+            { lastDonationDate: null },
+            { lastDonationDate: { $lte: ninetyDaysAgo } }
+          ]
+        }
+      }
+    ]);
     
     const hospitalsInRange = await Hospital.find({
       location: {
         $near: {
           $geometry: { type: 'Point', coordinates: [longitude, latitude] },
-          $maxDistance: 50000
+          $maxDistance: 30000
         }
       }
     });
@@ -38,11 +51,10 @@ const triggerEmergencyAlert = async (req, res) => {
     const emails = [...usersInRange.map(u => u.email), ...hospitalsInRange.map(h => h.email)];
     
     if (emails.length > 0) {
-      // Send emails (simulate in test mode if needed)
       await sendEmergencyEmail(emails, bloodGroup, message);
     }
     
-    res.json({ message: `Emergency alert triggered to ${emails.length} contacts within 50km radius.` });
+    res.json({ message: `Team Error-404 Alert Triggered! Reached ${emails.length} eligible contacts within 30km of Asansol.` });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

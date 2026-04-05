@@ -80,6 +80,14 @@ const connectDB = async () => {
             console.log('Seeding complete.');
         }
 
+        // --- CRITICAL FIX: Explicitly Build 2dsphere Indexes ---
+        // Forces MongoDB to map the required grid indexes for the $geoNear Hacktropica math.
+        console.log('Syncing planetary matrix indexes...');
+        const User = require('./models/User');
+        await Hospital.syncIndexes();
+        await User.syncIndexes();
+        console.log('✅ 2dsphere Geolocation Matrix active.');
+
         // 3. Server Initialization Logic: Only listen if DB connects
         app.listen(PORT, () => {
             console.log(`🚀 SBAN Terminal initialized on port ${PORT}`);

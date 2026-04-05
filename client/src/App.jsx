@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/layout/Navbar';
 import EmergencyFAB from './components/common/EmergencyFAB';
+import EmergencyAlertNotification from './components/common/EmergencyAlertNotification';
 import LandingPage from './pages/LandingPage';
 import AuthPage from './pages/AuthPage';
 import HospitalList from './pages/HospitalList';
@@ -14,7 +15,8 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="flex flex-col min-h-screen">
+        <div className="flex flex-col min-h-screen relative">
+          <EmergencyAlertNotification />
           <Navbar />
           <main className="flex-grow">
             <Routes>

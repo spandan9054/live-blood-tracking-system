@@ -10,6 +10,28 @@ const getHospitals = async (req, res) => {
         const hospitalsWithIds = hospitals.map((h, i) => ({ ...h, _id: `mock_${i}` }));
         return res.json(hospitalsWithIds);
     }
+
+    const { lng, lat } = req.query;
+    if (lng && lat) {
+      try {
+        const hospitals = await Hospital.aggregate([
+          {
+            $geoNear: {
+              near: { type: 'Point', coordinates: [parseFloat(lng), parseFloat(lat)] },
+              key: 'location',
+              distanceField: 'distance',
+              maxDistance: 50000,
+              spherical: true
+            }
+          }
+        ]);
+        return res.json(hospitals);
+      } catch (geoError) {
+        console.error('GeoNear Index Mapping Failed, initiating structural fallback:', geoError.message);
+        // Fallback to standard list extraction below if the spatial grid drops
+      }
+    }
+
     const hospitals = await Hospital.find({}).select('-password');
     res.json(hospitals);
   } catch (error) {

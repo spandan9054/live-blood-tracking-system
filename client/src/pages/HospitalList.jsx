@@ -61,8 +61,8 @@ const HospitalList = () => {
     setFormData({ name: '', email: '', phone: '', address: '', gender: 'Other', medicalHistory: '', bloodGroup: 'A+' });
   };
 
-  const submitRequest = async (e) => {
-    e.preventDefault();
+  const submitRequest = async (e, isRetry = false) => {
+    if (!isRetry) e.preventDefault();
     setIsSubmitting(true);
     try {
       await api.post('/requests/new', { ...formData, hospitalId: selectedHospital });
@@ -70,9 +70,19 @@ const HospitalList = () => {
       closeModal();
     } catch (error) {
       console.error("DEBUG RAW AXIOS ERROR:", error);
-      alert(error.response?.data?.message || "Transmission Failure. Request Dropped.");
-    } finally {
-      setIsSubmitting(false);
+      
+      const errorMessage = error.response?.data?.message || "";
+      
+      // Intelligent Error Bypass & Retry Logic
+      if (!isRetry && (errorMessage.includes('planetary network error') || !error.response)) {
+          alert("Searching for nearest Node...");
+          setTimeout(() => {
+              submitRequest(e, true);
+          }, 5000);
+      } else {
+          alert(errorMessage || "Transmission Failure. Request Dropped.");
+          setIsSubmitting(false);
+      }
     }
   };
 

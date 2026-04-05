@@ -71,6 +71,47 @@
     0%, 100% { opacity: 1; transform: scale(1); }
     50% { opacity: 0.8; transform: scale(1.02); }
   }
+
+  /* Team Error-404: Standalone Emergency Alert Animations */
+  .antigravity-emergency {
+    animation: levitate-emergency 4s ease-in-out infinite;
+  }
+  
+  .radar-ripple-container {
+    position: relative;
+    z-index: 1;
+  }
+
+  .radar-ripple-container::before, .radar-ripple-container::after {
+    content: '';
+    position: absolute;
+    inset: -20px;
+    border-radius: 50%;
+    border: 2px solid rgba(178, 34, 34, 0.4);
+    animation: radar-expanding 3s cubic-bezier(0.165, 0.84, 0.44, 1) infinite;
+    z-index: -1;
+    pointer-events: none;
+  }
+  
+  .radar-ripple-container::after {
+    animation-delay: 1.5s;
+  }
+
+  @keyframes levitate-emergency {
+    0%, 100% {
+      transform: translateY(0);
+      box-shadow: 0 10px 30px rgba(178, 34, 34, 0.2), 0 0 20px rgba(178,34,34,0.1);
+    }
+    50% {
+      transform: translateY(-10px);
+      box-shadow: 0 25px 50px rgba(178, 34, 34, 0.4), 0 0 40px rgba(178,34,34,0.3);
+    }
+  }
+
+  @keyframes radar-expanding {
+    0% { transform: scale(0.5); opacity: 1; }
+    100% { transform: scale(2.5); opacity: 0; }
+  }
 }
 
 body {
